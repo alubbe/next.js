@@ -14,6 +14,7 @@ exports.decodeReplyFromBusboy = s.decodeReplyFromBusboy;
 exports.decodeReplyFromAsyncIterable = s.decodeReplyFromAsyncIterable;
 exports.decodeAction = s.decodeAction;
 exports.decodeFormState = s.decodeFormState;
+exports.unstable_markAsyncSequenceRootTask = s.unstable_markAsyncSequenceRootTask;
 exports.registerServerReference = s.registerServerReference;
 exports.registerClientReference = s.registerClientReference;
 exports.createClientModuleProxy = s.createClientModuleProxy;

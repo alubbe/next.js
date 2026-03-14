@@ -3877,3 +3877,4 @@ exports.renderToReadableStream = function (model, webpackMap, options) {
     { highWaterMark: 0 }
   );
 };
+exports.unstable_markAsyncSequenceRootTask = function () {};

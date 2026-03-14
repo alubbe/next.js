@@ -611,6 +611,7 @@ export async function handleAction({
   }
 
   let temporaryReferences: TemporaryReferenceSet | undefined
+  let markAsyncSequenceRootTask: undefined | (() => void)
 
   // When running actions the default is no-store, you can still `cache: 'force-cache'`
   workStore.fetchCache = 'default-no-store'
@@ -864,10 +865,11 @@ export async function handleAction({
             decodeReplyFromBusboy,
             decodeAction,
             decodeFormState,
+            unstable_markAsyncSequenceRootTask,
           } = require(
             `./react-server.node`
           ) as typeof import('./react-server.node')
-
+          markAsyncSequenceRootTask = unstable_markAsyncSequenceRootTask
           temporaryReferences = createTemporaryReferenceSet()
 
           const { PassThrough, Readable, Transform } =
@@ -1199,6 +1201,9 @@ export async function handleAction({
       }
 
       // For an MPA action, the redirect doesn't need a body, just a Location header.
+      if (process.env.NODE_ENV === 'development') {
+        markAsyncSequenceRootTask?.()
+      }
       res.setHeader('Location', redirectUrl)
       return {
         type: 'done',

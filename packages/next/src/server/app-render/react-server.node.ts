@@ -7,4 +7,5 @@ export {
   decodeReplyFromBusboy,
   decodeAction,
   decodeFormState,
+  unstable_markAsyncSequenceRootTask,
 } from 'react-server-dom-webpack/server.node'

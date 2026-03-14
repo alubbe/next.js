@@ -3826,3 +3826,4 @@ exports.renderToReadableStream = function (model, turbopackMap, options) {
     { highWaterMark: 0 }
   );
 };
+exports.unstable_markAsyncSequenceRootTask = function () {};

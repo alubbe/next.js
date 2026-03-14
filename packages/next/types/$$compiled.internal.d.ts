@@ -272,6 +272,8 @@ declare module 'react-server-dom-webpack/server.node' {
     body: FormData,
     serverManifest: ServerManifest
   ): Promise<ReactFormState | null>
+
+  export function unstable_markAsyncSequenceRootTask(): void
 }
 declare module 'react-server-dom-webpack/static' {
   export type TemporaryReferenceSet = WeakMap<any, string>

@@ -1488,6 +1488,74 @@ export async function copy_vendor_react(task_) {
         )
     }
 
+    function replaceOnceOrThrow(source, from, to, description) {
+      if (!source.includes(from)) {
+        throw new Error(`Could not patch ${description}`)
+      }
+
+      return source.replace(from, to)
+    }
+
+    function addAsyncSequenceRootTaskToServerNodeEntry(source) {
+      if (source.includes('exports.unstable_markAsyncSequenceRootTask')) {
+        return source
+      }
+
+      return replaceOnceOrThrow(
+        source,
+        'exports.decodeFormState = s.decodeFormState;\n',
+        'exports.decodeFormState = s.decodeFormState;\nexports.unstable_markAsyncSequenceRootTask = s.unstable_markAsyncSequenceRootTask;\n',
+        'server.node entrypoint'
+      )
+    }
+
+    function addAsyncSequenceRootTaskToServerNodeDevelopmentBundle(source) {
+      if (source.includes('exports.unstable_markAsyncSequenceRootTask')) {
+        return source
+      }
+
+      return replaceOnceOrThrow(
+        source,
+        '  })();',
+        '    exports.unstable_markAsyncSequenceRootTask = function () {\n      pendingOperations.delete(async_hooks.executionAsyncId());\n    };\n  })();',
+        'server.node development bundle'
+      )
+    }
+
+    function addAsyncSequenceRootTaskToServerNodeProductionBundle(source) {
+      if (source.includes('exports.unstable_markAsyncSequenceRootTask')) {
+        return source
+      }
+
+      return source.endsWith('\n')
+        ? `${source}exports.unstable_markAsyncSequenceRootTask = function () {};\n`
+        : `${source}\nexports.unstable_markAsyncSequenceRootTask = function () {};\n`
+    }
+
+    function maybeAddAsyncSequenceRootTask(source, fileBase) {
+      if (fileBase === 'server.node.js') {
+        return addAsyncSequenceRootTaskToServerNodeEntry(source)
+      }
+
+      if (
+        /react-server-dom-(webpack|turbopack)-server\.node\.development\.js$/.test(
+          fileBase
+        )
+      ) {
+        return addAsyncSequenceRootTaskToServerNodeDevelopmentBundle(source)
+      }
+
+      if (
+        /react-server-dom-(webpack|turbopack)-server\.node\.production\.js$/.test(
+          fileBase
+        )
+      ) {
+        return addAsyncSequenceRootTaskToServerNodeProductionBundle(source)
+      }
+
+      return source
+    }
+
     const schedulerDir = dirname(
       relative(__dirname, require.resolve(`scheduler-${channel}/package.json`))
     )
@@ -1675,9 +1743,17 @@ export async function copy_vendor_react(task_) {
             ])
           )
 
-          file.data = recast.print(ast).code
+          file.data = maybeAddAsyncSequenceRootTask(
+            recast.print(ast).code,
+            file.base
+          )
         } else if (file.base === 'package.json') {
           file.data = overridePackageName(file.data)
+        } else {
+          file.data = maybeAddAsyncSequenceRootTask(
+            file.data.toString(),
+            file.base
+          )
         }
       })
       .target(`src/compiled/react-server-dom-webpack${packageSuffix}`)
@@ -1734,9 +1810,17 @@ export async function copy_vendor_react(task_) {
             ])
           )
 
-          file.data = recast.print(ast).code
+          file.data = maybeAddAsyncSequenceRootTask(
+            recast.print(ast).code,
+            file.base
+          )
         } else if (file.base === 'package.json') {
           file.data = overridePackageName(file.data)
+        } else {
+          file.data = maybeAddAsyncSequenceRootTask(
+            file.data.toString(),
+            file.base
+          )
         }
       })
       .target(`src/compiled/react-server-dom-turbopack${packageSuffix}`)

@@ -6343,7 +6343,10 @@
           }
         })
         .enable();
-    })();
+      exports.unstable_markAsyncSequenceRootTask = function () {
+      pendingOperations.delete(async_hooks.executionAsyncId());
+    };
+  })();
     "object" === typeof console &&
       null !== console &&
       (patchConsole(console, "assert"),
